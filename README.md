@@ -2,6 +2,8 @@
 
 A browser game for learning matrix operations, built for CS 3307. Players work through levels from matrix basics to determinants and inverses, with hints and explanations, then test themselves in a timed competitive mode.
 
+**Play it:** https://nmeko.github.io/3307-Matrix-Match/ (free, in the browser, nothing to install)
+
 **Stack:** Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · Radix UI · Framer Motion · Vitest
 
 ## Features
@@ -23,10 +25,14 @@ pnpm dev          # http://localhost:3000
 
 | Command | What it does |
 |---|---|
-| `pnpm build` / `pnpm start` | Production build and server |
+| `pnpm build` | Static export to `out/` (what GitHub Pages serves) |
 | `pnpm lint` | ESLint (Next.js core web vitals + TypeScript rules) |
 | `pnpm typecheck` | TypeScript, strict |
 | `pnpm test` | Checks every question: the answer is one of its options, and each translation lists its options in the same order as English |
+
+## Hosting
+
+The game is a static site, so it's hosted for free on GitHub Pages. Every push to `main` runs `.github/workflows/pages.yml`, which builds it with the repository name as the path prefix and publishes it. One-time setup: **Settings → Pages → Source: GitHub Actions**.
 
 ## How it's built
 
