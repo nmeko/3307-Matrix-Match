@@ -9,7 +9,7 @@ A browser game for learning matrix operations, built for CS 3307. Players work t
 ## Features
 
 - **Regular mode:** three levels (Matrix Basics, Matrix Operations, Matrix Master), each with Easy, Medium and Hard rounds. Three attempts per question, a hint panel, worked explanations, and progress that unlocks as you pass rounds.
-- **Competitive mode:** five timed questions per difficulty, scored on accuracy, speed and answer streaks, with a final rank.
+- **Competitive mode:** quiz-show style. Five timed questions per difficulty, answered on four colored tiles (or keys 1–4), scored on accuracy, speed and streaks, with a final rank and a top-5 scoreboard saved on the device.
 - **Five languages:** English, Spanish, Mandarin, Hindi and Arabic (laid out right to left), switchable at any time.
 - **Accessibility settings:** high-contrast mode, four text sizes and optional sound effects.
 - **Saved progress:** levels and settings persist in the browser's local storage; no account needed.

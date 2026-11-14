@@ -6,256 +6,39 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { motion, AnimatePresence } from "framer-motion"
 import confetti from "canvas-confetti"
+import { COMPETITIVE_QUESTIONS } from "@/lib/competitive-questions"
 import { Trophy, Clock, Zap, X, Check } from "lucide-react"
 import { useGame } from "@/lib/game-context"
 
-const COMPETITIVE_QUESTIONS = {
-  easy: [
-    {
-      id: "c1",
-      question: "How many rows in this matrix?",
-      translations: {
-        es: { question: "¿Cuántas filas hay en esta matriz?" },
-        zh: { question: "这个矩阵有多少行？" },
-        hi: { question: "इस मैट्रिक्स में कितनी पंक्तियां हैं?" },
-        ar: { question: "كم عدد الصفوف في هذه المصفوفة؟" },
-      },
-      matrix: [
-        [1, 2],
-        [3, 4],
-      ],
-      answer: "2",
-      time: 15,
-    },
-    {
-      id: "c2",
-      question: "What is at R1, C1?",
-      translations: {
-        es: { question: "¿Qué hay en R1, C1?" },
-        zh: { question: "R1, C1处是什么？" },
-        hi: { question: "R1, C1 पर क्या है?" },
-        ar: { question: "ما هو في R1, C1؟" },
-      },
-      matrix: [
-        [5, 6],
-        [7, 8],
-      ],
-      answer: "5",
-      time: 15,
-    },
-    {
-      id: "c3",
-      question: "Is this a square matrix?",
-      translations: {
-        es: { question: "¿Es una matriz cuadrada?" },
-        zh: { question: "这是一个正方矩阵吗？" },
-        hi: { question: "क्या यह एक वर्ग मैट्रिक्स है?" },
-        ar: { question: "هل هذه مصفوفة مربعة؟" },
-      },
-      matrix: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-      answer: "no",
-      time: 15,
-    },
-    {
-      id: "c4",
-      question: "How many elements total?",
-      translations: {
-        es: { question: "¿Cuántos elementos en total?" },
-        zh: { question: "总共有多少个元素？" },
-        hi: { question: "कुल कितने तत्व हैं?" },
-        ar: { question: "كم عدد العناصر الإجمالي؟" },
-      },
-      matrix: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-      answer: "6",
-      time: 15,
-    },
-    {
-      id: "c5",
-      question: "Sum of first row?",
-      translations: {
-        es: { question: "¿Suma de la primera fila?" },
-        zh: { question: "第一行的和是多少？" },
-        hi: { question: "पहली पंक्ति का योग?" },
-        ar: { question: "مجموع الصف الأول؟" },
-      },
-      matrix: [
-        [2, 3],
-        [4, 5],
-      ],
-      answer: "5",
-      time: 15,
-    },
-  ],
-  medium: [
-    {
-      id: "m1",
-      question: "Diagonal sum (trace)?",
-      translations: {
-        es: { question: "¿Suma diagonal (traza)?" },
-        zh: { question: "对角线和（迹）？" },
-        hi: { question: "विकर्ण योग (ट्रेस)?" },
-        ar: { question: "مجموع القطر (الأثر)؟" },
-      },
-      matrix: [
-        [3, 0],
-        [0, 4],
-      ],
-      answer: "7",
-      time: 12,
-    },
-    {
-      id: "m2",
-      question: "Element at R2, C2?",
-      translations: {
-        es: { question: "¿Elemento en R2, C2?" },
-        zh: { question: "R2, C2处的元素？" },
-        hi: { question: "R2, C2 पर तत्व?" },
-        ar: { question: "العنصر في R2, C2؟" },
-      },
-      matrix: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-      answer: "5",
-      time: 12,
-    },
-    {
-      id: "m3",
-      question: "Add: [1,2] + [3,4] = ?",
-      translations: {
-        es: { question: "Añadir: [1,2] + [3,4] = ?" },
-        zh: { question: "添加: [1,2] + [3,4] = ?" },
-        hi: { question: "जोड़ें: [1,2] + [3,4] = ?" },
-        ar: { question: "أضف: [1,2] + [3,4] = ؟" },
-      },
-      matrix: [
-        [1, 2],
-        [3, 4],
-      ],
-      answer: "[4,6]",
-      time: 12,
-    },
-    {
-      id: "m4",
-      question: "Matrix dimensions?",
-      translations: {
-        es: { question: "¿Dimensiones de la matriz?" },
-        zh: { question: "矩阵尺寸？" },
-        hi: { question: "मैट्रिक्स आयाम?" },
-        ar: { question: "أبعاد المصفوفة؟" },
-      },
-      matrix: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-      answer: "2x4",
-      time: 12,
-    },
-    {
-      id: "m5",
-      question: "Last column sum?",
-      translations: {
-        es: { question: "¿Suma de la última columna?" },
-        zh: { question: "最后一列的和？" },
-        hi: { question: "अंतिम स्तंभ का योग?" },
-        ar: { question: "مجموع العمود الأخير؟" },
-      },
-      matrix: [
-        [1, 5],
-        [2, 6],
-        [3, 7],
-      ],
-      answer: "18",
-      time: 12,
-    },
-  ],
-  hard: [
-    {
-      id: "h1",
-      question: "Matrix transpose [1,2;3,4]?",
-      translations: {
-        es: { question: "¿Transposición de matriz [1,2;3,4]?" },
-        zh: { question: "矩阵转置 [1,2;3,4]?" },
-        hi: { question: "मैट्रिक्स स्थानांतरण [1,2;3,4]?" },
-        ar: { question: "تبديل المصفوفة [1,2;3,4]؟" },
-      },
-      matrix: [
-        [1, 2],
-        [3, 4],
-      ],
-      answer: "[1,3;2,4]",
-      time: 10,
-    },
-    {
-      id: "h2",
-      question: "Determinant of 2x2?",
-      translations: {
-        es: { question: "¿Determinante de 2x2?" },
-        zh: { question: "2x2的行列式？" },
-        hi: { question: "2x2 का निर्धारक?" },
-        ar: { question: "محدد 2x2؟" },
-      },
-      matrix: [
-        [2, 3],
-        [1, 4],
-      ],
-      answer: "5",
-      time: 10,
-    },
-    {
-      id: "h3",
-      question: "Identity matrix sum?",
-      translations: {
-        es: { question: "¿Suma de matriz identidad?" },
-        zh: { question: "单位矩阵和？" },
-        hi: { question: "पहचान मैट्रिक्स योग?" },
-        ar: { question: "مجموع مصفوفة الهوية؟" },
-      },
-      matrix: [
-        [1, 0],
-        [0, 1],
-      ],
-      answer: "2",
-      time: 10,
-    },
-    {
-      id: "h4",
-      question: "Row 1 × 2 = ?",
-      translations: {
-        es: { question: "¿Fila 1 × 2 = ?" },
-        zh: { question: "第1行 × 2 = ?" },
-        hi: { question: "पंक्ति 1 × 2 = ?" },
-        ar: { question: "الصف 1 × 2 = ؟" },
-      },
-      matrix: [[3, 4]],
-      answer: "[6,8]",
-      time: 10,
-    },
-    {
-      id: "h5",
-      question: "Zero matrix check?",
-      translations: {
-        es: { question: "¿Comprobación de matriz cero?" },
-        zh: { question: "零矩阵检查？" },
-        hi: { question: "शून्य मैट्रिक्स जांच?" },
-        ar: { question: "فحص مصفوفة الأصفار؟" },
-      },
-      matrix: [
-        [0, 0],
-        [0, 0],
-      ],
-      answer: "yes",
-      time: 10,
-    },
-  ],
+// Quiz-show answer tiles: a color and a shape each, so they read without color too.
+const TILES = [
+  { className: "bg-red-500", shape: "▲" },
+  { className: "bg-blue-500", shape: "◆" },
+  { className: "bg-yellow-500", shape: "●" },
+  { className: "bg-green-600", shape: "■" },
+]
+
+const YES_NO: Record<string, [string, string]> = {
+  English: ["Yes", "No"], Spanish: ["Sí", "No"], Mandarin: ["是", "否"], Hindi: ["हाँ", "नहीं"], Arabic: ["نعم", "لا"],
+}
+const label = (opt: string, language: string) =>
+  opt === "yes" ? YES_NO[language]?.[0] ?? "Yes" : opt === "no" ? YES_NO[language]?.[1] ?? "No" : opt
+
+type HighScore = { name: string; score: number; at: number; latest?: boolean }
+
+// Keeps the top 5 scores per difficulty in this browser and returns them, marking the new one.
+function saveHighScore(difficulty: string, name: string, score: number): HighScore[] {
+  const key = `matrix-match-highscores-${difficulty}`
+  let list: HighScore[] = []
+  try {
+    list = JSON.parse(localStorage.getItem(key) || "[]")
+  } catch {}
+  const entry = { name: name.slice(0, 20), score, at: Date.now() }
+  list = [...list.filter((h) => typeof h.score === "number"), entry].sort((a, b) => b.score - a.score).slice(0, 5)
+  try {
+    localStorage.setItem(key, JSON.stringify(list))
+  } catch {}
+  return list.map((h) => ({ ...h, latest: h.at === entry.at }))
 }
 
 function CompetitiveGameContent() {
@@ -270,7 +53,10 @@ function CompetitiveGameContent() {
   const questions = COMPETITIVE_QUESTIONS[difficulty]
   const [currentQIndex, setCurrentQIndex] = useState(0)
   const [timeLeft, setTimeLeft] = useState(questions[0].time)
-  const [inputAnswer, setInputAnswer] = useState("")
+  const [chosen, setChosen] = useState<string | null>(null)
+  const [highScores, setHighScores] = useState<HighScore[]>([])
+  // The final score must include the last answer, which state updates would not have applied yet
+  const scoreRef = useRef(0)
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
   const [showResult, setShowResult] = useState(false)
@@ -324,10 +110,11 @@ function CompetitiveGameContent() {
     setTimeout(nextQuestion, 2000)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = (choice: string) => {
     if (answered.current || gameOver) return
     answered.current = true
-    const correct = inputAnswer.trim().toLowerCase() === currentQuestion.answer.toLowerCase()
+    setChosen(choice)
+    const correct = choice === currentQuestion.answer
     setIsCorrect(correct)
     setShowResult(true)
 
@@ -337,6 +124,7 @@ function CompetitiveGameContent() {
       const streakBonus = streak * 200
       const totalPoints = basePoints + speedBonus + streakBonus
 
+      scoreRef.current += totalPoints
       setScore((prev) => prev + totalPoints)
       setStreak((prev) => prev + 1)
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })
@@ -352,9 +140,10 @@ function CompetitiveGameContent() {
       answered.current = false
       setCurrentQIndex((prev) => prev + 1)
       setTimeLeft(questions[currentQIndex + 1].time)
-      setInputAnswer("")
+      setChosen(null)
       setShowResult(false)
     } else {
+      setHighScores(saveHighScore(difficulty, playerName, scoreRef.current))
       setGameOver(true)
     }
   }
@@ -363,6 +152,16 @@ function CompetitiveGameContent() {
   useEffect(() => {
     if (timeLeft === 0 && !showResult && !gameOver) handleTimeout()
   }, [timeLeft, showResult, gameOver]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Number keys 1-4 pick the matching answer tile
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const i = Number(e.key) - 1
+      if (i >= 0 && i < currentQuestion.options.length) handleSubmit(currentQuestion.options[i])
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  })
 
   // Celebrate a high final score once the last answer has been counted
   useEffect(() => {
@@ -401,6 +200,22 @@ function CompetitiveGameContent() {
               <p className="text-sm font-bold text-green-900">Avg/Q</p>
               <p className="text-2xl font-black">{avgScore}</p>
             </div>
+          </div>
+
+          <div className="text-left mb-6">
+            <h2 className="font-black text-lg mb-2 capitalize">Top scores · {difficulty}</h2>
+            <ol className="space-y-1">
+              {highScores.map((h, i) => (
+                <li
+                  key={`${h.at}-${i}`}
+                  className={`flex justify-between rounded-lg px-3 py-2 border-2 ${h.latest ? "bg-yellow-100 border-yellow-400 font-black" : "bg-gray-50 border-gray-200 font-bold"}`}
+                >
+                  <span>{i + 1}. {h.name}</span>
+                  <span>{h.score.toLocaleString()}</span>
+                </li>
+              ))}
+            </ol>
+            <p className="text-xs text-muted-foreground mt-2">Saved on this device.</p>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -510,23 +325,19 @@ function CompetitiveGameContent() {
               )}
 
               {!showResult ? (
-                <div className="space-y-4">
-                  <input
-                    type="text"
-                    value={inputAnswer}
-                    onChange={(e) => setInputAnswer(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                    placeholder="Type answer..."
-                    className="w-full p-6 text-center text-3xl font-bold border-4 border-black rounded-xl focus:border-blue-500 focus:outline-none"
-                    autoFocus
-                  />
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!inputAnswer.trim()}
-                    className="game-btn w-full text-2xl h-16"
-                  >
-                    SUBMIT
-                  </Button>
+                <div className={`grid gap-3 ${currentQuestion.options.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
+                  {currentQuestion.options.map((opt, i) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => handleSubmit(opt)}
+                      className={`${TILES[i].className} flex items-center gap-4 rounded-xl border-4 border-black p-5 text-left text-2xl md:text-3xl font-black text-white shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-1 active:translate-y-0 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black`}
+                    >
+                      <span aria-hidden="true" className="text-3xl">{TILES[i].shape}</span>
+                      <span className="flex-1">{label(opt, gameSettings.language)}</span>
+                      <kbd className="hidden md:inline text-sm font-bold opacity-80">{i + 1}</kbd>
+                    </button>
+                  ))}
                 </div>
               ) : (
                 <motion.div
@@ -543,7 +354,7 @@ function CompetitiveGameContent() {
                     <h3 className="text-4xl font-black">{isCorrect ? "CORRECT!" : "WRONG!"}</h3>
                   </div>
                   {!isCorrect && (
-                    <p className="text-xl font-bold text-muted-foreground">Answer: {currentQuestion.answer}</p>
+                    <p className="text-xl font-bold text-muted-foreground">{chosen === null ? "Time's up! " : ""}Answer: {label(currentQuestion.answer, gameSettings.language)}</p>
                   )}
                 </motion.div>
               )}
