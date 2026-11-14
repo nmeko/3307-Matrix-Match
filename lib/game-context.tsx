@@ -7,7 +7,7 @@ import { GAME_LEVELS } from "./game-data"
 
 interface GameState {
   levels: Level[]
-  completeSubLevel: (levelId: number, difficulty: Difficulty, passed: boolean) => void
+  completeSubLevel: (levelId: number, difficulty: Difficulty | Lowercase<Difficulty>, passed: boolean) => void
   resetProgress: () => void
   gameSettings: GameSettings
   setGameSettings: (settings: Partial<GameSettings>) => void
@@ -30,7 +30,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = localStorage.getItem("matrix-match-progress")
       if (saved) {
-        setLevels(JSON.parse(saved))
+        // Saved progress can only be read after mount (localStorage doesn't exist on the server).
+        setLevels(JSON.parse(saved)) // eslint-disable-line react-hooks/set-state-in-effect
       }
 
       const savedSettings = localStorage.getItem("matrix-match-settings")
@@ -76,10 +77,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       } else {
         document.documentElement.setAttribute("data-text-size", gameSettings.textSize)
       }
+
+      // Tell browsers and screen readers the language, and lay Arabic out right to left
+      const langCode = { English: "en", Spanish: "es", Mandarin: "zh", Hindi: "hi", Arabic: "ar" }[gameSettings.language]
+      document.documentElement.lang = langCode
+      document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr"
     }
   }, [gameSettings, isHydrated])
 
-  const completeSubLevel = useCallback((levelId: number, difficulty: Difficulty, passed: boolean) => {
+  const completeSubLevel = useCallback((levelId: number, difficulty: Difficulty | Lowercase<Difficulty>, passed: boolean) => {
     setLevels((prev) =>
       prev.map((level) => {
         if (level.id !== levelId) return level

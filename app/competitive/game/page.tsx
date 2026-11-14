@@ -1,14 +1,13 @@
 "use client"
 
 import { useSearchParams, useRouter } from "next/navigation"
-import { useState, useEffect, Suspense, useMemo } from "react"
+import { useState, useEffect, useRef, Suspense, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { motion, AnimatePresence } from "framer-motion"
 import confetti from "canvas-confetti"
 import { Trophy, Clock, Zap, X, Check } from "lucide-react"
 import { useGame } from "@/lib/game-context"
-import { useTranslation } from "@/lib/use-translation"
 
 const COMPETITIVE_QUESTIONS = {
   easy: [
@@ -263,10 +262,10 @@ function CompetitiveGameContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { gameSettings } = useGame()
-  const t = useTranslation()
 
   const playerName = searchParams.get("name") || "Player"
-  const difficulty = (searchParams.get("difficulty") || "easy") as keyof typeof COMPETITIVE_QUESTIONS
+  const requested = searchParams.get("difficulty") ?? ""
+  const difficulty = (requested in COMPETITIVE_QUESTIONS ? requested : "easy") as keyof typeof COMPETITIVE_QUESTIONS
 
   const questions = COMPETITIVE_QUESTIONS[difficulty]
   const [currentQIndex, setCurrentQIndex] = useState(0)
@@ -279,6 +278,8 @@ function CompetitiveGameContent() {
   const [gameOver, setGameOver] = useState(false)
 
   const currentQuestion = questions[currentQIndex]
+  // Set synchronously so fast repeat presses can't answer the same question twice
+  const answered = useRef(false)
   const totalQuestions = questions.length
 
   const translatedQuestion = useMemo(() => {
@@ -301,26 +302,22 @@ function CompetitiveGameContent() {
       currentQuestion.translations?.[langCode as keyof typeof currentQuestion.translations]?.question ||
       currentQuestion.question
     )
-  }, [currentQIndex, gameSettings.language])
+  }, [currentQuestion, gameSettings.language])
 
   // Timer countdown
   useEffect(() => {
     if (showResult || gameOver) return
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleTimeout()
-          return 0
-        }
-        return prev - 1
-      })
+      setTimeLeft((prev) => Math.max(prev - 1, 0))
     }, 1000)
 
     return () => clearInterval(interval)
   }, [currentQIndex, showResult, gameOver])
 
   const handleTimeout = () => {
+    if (answered.current) return
+    answered.current = true
     setIsCorrect(false)
     setShowResult(true)
     setStreak(0)
@@ -328,6 +325,8 @@ function CompetitiveGameContent() {
   }
 
   const handleSubmit = () => {
+    if (answered.current || gameOver) return
+    answered.current = true
     const correct = inputAnswer.trim().toLowerCase() === currentQuestion.answer.toLowerCase()
     setIsCorrect(correct)
     setShowResult(true)
@@ -350,17 +349,25 @@ function CompetitiveGameContent() {
 
   const nextQuestion = () => {
     if (currentQIndex < totalQuestions - 1) {
+      answered.current = false
       setCurrentQIndex((prev) => prev + 1)
       setTimeLeft(questions[currentQIndex + 1].time)
       setInputAnswer("")
       setShowResult(false)
     } else {
       setGameOver(true)
-      if (score > 3000) {
-        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } })
-      }
     }
   }
+
+  // Handlers are recreated every render, so these effects always see current state.
+  useEffect(() => {
+    if (timeLeft === 0 && !showResult && !gameOver) handleTimeout()
+  }, [timeLeft, showResult, gameOver]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Celebrate a high final score once the last answer has been counted
+  useEffect(() => {
+    if (gameOver && score > 3000) confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } })
+  }, [gameOver]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (gameOver) {
     const avgScore = Math.round(score / totalQuestions)

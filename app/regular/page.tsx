@@ -9,7 +9,7 @@ export default function RegularModeMenu() {
   const t = useTranslation()
 
   console.log("[v0] Total levels loaded:", levels.length)
-  levels.forEach((level, index) => {
+  levels.forEach((level) => {
     console.log(`[v0] Level ${level.id} (${level.name}):`, {
       easy: level.subLevels?.easy ? `${level.subLevels.easy.questions.length} questions` : "MISSING",
       medium: level.subLevels?.medium ? `${level.subLevels.medium.questions.length} questions` : "MISSING",

@@ -44,8 +44,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col items-center justify-center p-4 z-10 gap-8">
         <div className="text-center space-y-4 max-w-2xl">
           <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground drop-shadow-sm">
-            {t("masterTheMatrix")}{" "}
-            <span className="text-primary inline-block hover:scale-110 transition-transform">MATRIX</span>
+            <span className="text-primary">{t("masterTheMatrix")}</span>
           </h2>
           <p className="text-lg md:text-xl font-medium text-muted-foreground max-w-md mx-auto">{t("joinTheFun")}</p>
         </div>

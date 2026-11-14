@@ -11,37 +11,11 @@ export type Question = {
   type: "multiple-choice" | "input" | "matrix-fill" | "true-false"
   hint?: string
   definition?: string
-  translations?: {
-    es?: {
-      question?: string
-      options?: string[]
-      explanation?: string
-      hint?: string
-      definition?: string
-    }
-    zh?: {
-      question?: string
-      options?: string[]
-      explanation?: string
-      hint?: string
-      definition?: string
-    }
-    hi?: {
-      question?: string
-      options?: string[]
-      explanation?: string
-      hint?: string
-      definition?: string
-    }
-    ar?: {
-      question?: string
-      options?: string[]
-      explanation?: string
-      hint?: string
-      definition?: string
-    }
-  }
+  translations?: Partial<Record<"es" | "zh" | "hi" | "ar", QuestionTranslation>>
 }
+
+/** Any question text or data, overridden for one language. */
+export type QuestionTranslation = Partial<Omit<Question, "id" | "type" | "translations">>
 
 export type SubLevel = {
   id: string
@@ -84,5 +58,5 @@ export type GameSettings = {
   language: "English" | "Spanish" | "Mandarin" | "Hindi" | "Arabic"
   soundEnabled: boolean
   highContrast: boolean
-  textSize: "normal" | "large" | "extra-large"
+  textSize: "normal" | "large" | "larger" | "largest"
 }

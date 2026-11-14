@@ -3,12 +3,14 @@
 import { useParams, useRouter } from "next/navigation"
 import { useGame } from "@/lib/game-context"
 import { useTranslation } from "@/lib/use-translation"
-import { useState, useRef, useMemo } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { MatrixDisplay } from "@/components/ui/matrix-display"
 import { HelpPanel } from "@/components/help-panel"
 import { Progress } from "@/components/ui/progress"
 import confetti from "canvas-confetti"
+import { playTone } from "@/lib/sound"
+import type { Question } from "@/lib/types"
 
 export default function GamePage() {
   const params = useParams()
@@ -26,14 +28,13 @@ export default function GamePage() {
   const [currentQIndex, setCurrentQIndex] = useState(0)
   const [attempts, setAttempts] = useState<Record<string, number>>({})
   const [status, setStatus] = useState<Record<string, "unanswered" | "correct" | "failed">>({})
-  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [inputAnswer, setInputAnswer] = useState("")
   const [showExplanation, setShowExplanation] = useState(false)
   const [showPreGame, setShowPreGame] = useState(true)
   const [gameFinished, setGameFinished] = useState(false)
 
-  const getTranslatedQuestion = useMemo(() => {
-    return (question: any) => {
+  const getTranslatedQuestion = (question: Question) => {
       const langCode =
         gameSettings.language === "English"
           ? "en"
@@ -63,25 +64,17 @@ export default function GamePage() {
         hint: translation?.hint || question.hint,
         definition: translation?.definition || question.definition,
       }
-    }
-  }, [gameSettings.language])
+  }
 
-  const bellAudio = useRef<HTMLAudioElement | null>(null)
-  const buzzerAudio = useRef<HTMLAudioElement | null>(null)
-
-  const currentQuestion = questions[currentQIndex]
-  const translatedQuestion = useMemo(
-    () => (currentQuestion ? getTranslatedQuestion(currentQuestion) : null),
-    [currentQIndex, getTranslatedQuestion],
-  )
+    const currentQuestion = questions[currentQIndex]
+  const translatedQuestion = currentQuestion ? getTranslatedQuestion(currentQuestion) : null
+  const correctIndex = currentQuestion?.options?.indexOf(currentQuestion.correctAnswer) ?? -1
   const currentAttempts = attempts[currentQuestion?.id] || 0
   const currentStatus = status[currentQuestion?.id] || "unanswered"
   const isQuestionDone = currentStatus !== "unanswered"
 
   const playSound = (type: "correct" | "wrong") => {
-    if (gameSettings.soundEnabled) {
-      console.log(`[v0] Playing ${type} sound`)
-    }
+    if (gameSettings.soundEnabled) playTone(type)
   }
 
   const handleSubmit = () => {
@@ -90,7 +83,7 @@ export default function GamePage() {
     let isCorrect = false
 
     if (currentQuestion.type === "multiple-choice" || currentQuestion.type === "true-false") {
-      isCorrect = selectedOption === currentQuestion.correctAnswer
+      isCorrect = selectedOption !== null && currentQuestion.options?.[selectedOption] === currentQuestion.correctAnswer
     } else {
       isCorrect = inputAnswer.trim().toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
     }
@@ -127,15 +120,6 @@ export default function GamePage() {
     }
   }
 
-  const handlePrev = () => {
-    if (currentQIndex > 0) {
-      setCurrentQIndex((prev) => prev - 1)
-      const prevQ = questions[currentQIndex - 1]
-      const prevStatus = status[prevQ.id]
-      setShowExplanation(prevStatus !== "unanswered")
-    }
-  }
-
   const finishGame = () => {
     setGameFinished(true)
     const correctCount = Object.values(status).filter((s) => s === "correct").length
@@ -157,7 +141,7 @@ export default function GamePage() {
         ? "text-lg"
         : gameSettings.textSize === "larger"
           ? "text-xl"
-          : "text-2xl"
+          : "text-2xl" // "largest"
 
   if (!level || !subLevel) return <div className="p-8 text-center font-bold">Level not found!</div>
 
@@ -293,17 +277,18 @@ export default function GamePage() {
             <div className="bg-white p-6 rounded-2xl border-4 border-foreground shadow-md">
               {currentQuestion.type === "multiple-choice" || currentQuestion.type === "true-false" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {translatedQuestion?.options?.map((opt) => (
+                  {translatedQuestion?.options?.map((opt: string, i: number) => (
                     <button
                       key={opt}
                       disabled={isQuestionDone}
-                      onClick={() => setSelectedOption(opt)}
+                      onClick={() => setSelectedOption(i)}
+                      aria-pressed={selectedOption === i}
                       className={`
                         p-4 rounded-xl border-4 font-bold transition-all
                         ${textSizeClass}
-                        ${selectedOption === opt ? "border-primary bg-blue-50 ring-2 ring-primary ring-offset-2" : "border-gray-200 hover:border-gray-400"}
-                        ${isQuestionDone && opt === currentQuestion.correctAnswer ? "bg-green-100 border-green-500" : ""}
-                        ${isQuestionDone && selectedOption === opt && opt !== currentQuestion.correctAnswer ? "bg-red-100 border-red-500" : ""}
+                        ${selectedOption === i ? "border-primary bg-blue-50 ring-2 ring-primary ring-offset-2" : "border-gray-200 hover:border-gray-400"}
+                        ${isQuestionDone && i === correctIndex ? "bg-green-100 border-green-500" : ""}
+                        ${isQuestionDone && selectedOption === i && i !== correctIndex ? "bg-red-100 border-red-500" : ""}
                       `}
                     >
                       {opt}
