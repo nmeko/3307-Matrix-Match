@@ -1,16 +1,16 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Nunito, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { GameProvider } from "@/lib/game-context"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" })
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
 
 export const metadata: Metadata = {
-  title: "3307 Matrix Match",
-  description: "A fun matrix learning game!",
-  generator: "v0.app",
+  title: "Matrix Match: learn matrices by playing",
+  description:
+    "A game for learning matrix operations: addition, multiplication, determinants and inverses, with hints, five languages and a timed competitive mode.",
 }
 
 export const viewport: Viewport = {
@@ -27,11 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
+    <html lang="en" className={`${nunito.variable} ${geistMono.variable}`}>
       <body className={`font-sans antialiased overflow-x-hidden`}>
         <GameProvider>{children}</GameProvider>
       </body>

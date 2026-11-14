@@ -10,6 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Trophy, Clock, Zap } from "lucide-react"
 import { motion } from "framer-motion"
 
+// Same "random" layout on the server and in the browser (Math.random would differ and break hydration).
+const bubble = (i: number, salt: number) => {
+  const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
+  return x - Math.floor(x)
+}
+
 export default function CompetitiveLobby() {
   const router = useRouter()
   const t = useTranslation()
@@ -33,19 +39,19 @@ export default function CompetitiveLobby() {
             key={i}
             className="absolute bg-white rounded-full"
             style={{
-              width: Math.random() * 100 + 20,
-              height: Math.random() * 100 + 20,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              width: bubble(i, 1) * 100 + 20,
+              height: bubble(i, 2) * 100 + 20,
+              left: `${bubble(i, 3) * 100}%`,
+              top: `${bubble(i, 4) * 100}%`,
             }}
             animate={{
               y: [0, -30, 0],
               opacity: [0.3, 0.7, 0.3],
             }}
             transition={{
-              duration: Math.random() * 3 + 2,
+              duration: bubble(i, 5) * 3 + 2,
               repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 2,
+              delay: bubble(i, 6) * 2,
             }}
           />
         ))}

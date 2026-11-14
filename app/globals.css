@@ -77,8 +77,8 @@
 }
 
 @theme inline {
-  --font-sans: "Comic Sans MS", "Chalkboard SE", "sans-serif";
-  --font-mono: "Geist Mono", "monospace";
+  --font-sans: var(--font-nunito), "Comic Sans MS", "Chalkboard SE", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
