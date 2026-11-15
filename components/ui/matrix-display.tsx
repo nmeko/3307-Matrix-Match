@@ -8,7 +8,8 @@ interface MatrixDisplayProps {
 
 export function MatrixDisplay({ data, highlight, className }: MatrixDisplayProps) {
   return (
-    <div className={cn("inline-flex items-center gap-2 font-mono text-2xl md:text-4xl", className)}>
+    // Matrices read left to right in every language, so Arabic's right-to-left layout must not flip them.
+    <div dir="ltr" className={cn("inline-flex items-center gap-2 font-mono text-2xl md:text-4xl", className)}>
       {/* Left Bracket */}
       <div className="w-4 border-2 border-r-0 border-foreground self-stretch rounded-l-xl" />
 

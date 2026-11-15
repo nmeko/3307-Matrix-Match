@@ -89,8 +89,8 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="fixed bottom-0 left-4 pointer-events-none">
-          <CharacterGuide message="Hi! Ready to learn?" mood="happy" />
+        <div className="fixed bottom-0 start-4 pointer-events-none hidden sm:block" aria-hidden="true">
+          <CharacterGuide message={t("helloReady")} mood="happy" />
         </div>
       </div>
     </main>

@@ -9,20 +9,9 @@ import confetti from "canvas-confetti"
 import { COMPETITIVE_QUESTIONS } from "@/lib/competitive-questions"
 import { Trophy, Clock, Zap, X, Check } from "lucide-react"
 import { useGame } from "@/lib/game-context"
-
-// Quiz-show answer tiles: a color and a shape each, so they read without color too.
-const TILES = [
-  { className: "bg-red-500", shape: "▲" },
-  { className: "bg-blue-500", shape: "◆" },
-  { className: "bg-yellow-500", shape: "●" },
-  { className: "bg-green-600", shape: "■" },
-]
-
-const YES_NO: Record<string, [string, string]> = {
-  English: ["Yes", "No"], Spanish: ["Sí", "No"], Mandarin: ["是", "否"], Hindi: ["हाँ", "नहीं"], Arabic: ["نعم", "لا"],
-}
-const label = (opt: string, language: string) =>
-  opt === "yes" ? YES_NO[language]?.[0] ?? "Yes" : opt === "no" ? YES_NO[language]?.[1] ?? "No" : opt
+import { useTranslation } from "@/lib/use-translation"
+import { langCode } from "@/lib/translations"
+import { TILES, optionLabel, LoadingText } from "@/lib/quiz-ui"
 
 type HighScore = { name: string; score: number; at: number; latest?: boolean }
 
@@ -45,6 +34,7 @@ function CompetitiveGameContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { gameSettings } = useGame()
+  const t = useTranslation()
 
   const playerName = searchParams.get("name") || "Player"
   const requested = searchParams.get("difficulty") ?? ""
@@ -69,25 +59,8 @@ function CompetitiveGameContent() {
   const totalQuestions = questions.length
 
   const translatedQuestion = useMemo(() => {
-    const langCode =
-      gameSettings.language === "English"
-        ? "en"
-        : gameSettings.language === "Spanish"
-          ? "es"
-          : gameSettings.language === "Mandarin"
-            ? "zh"
-            : gameSettings.language === "Hindi"
-              ? "hi"
-              : "ar"
-
-    if (langCode === "en") {
-      return currentQuestion.question
-    }
-
-    return (
-      currentQuestion.translations?.[langCode as keyof typeof currentQuestion.translations]?.question ||
-      currentQuestion.question
-    )
+    const code = langCode(gameSettings.language)
+    return (code !== "en" && currentQuestion.translations?.[code]?.question) || currentQuestion.question
   }, [currentQuestion, gameSettings.language])
 
   // Timer countdown
@@ -170,7 +143,7 @@ function CompetitiveGameContent() {
 
   if (gameOver) {
     const avgScore = Math.round(score / totalQuestions)
-    const rank = score > 4000 ? "Master" : score > 3000 ? "Expert" : score > 2000 ? "Intermediate" : "Beginner"
+    const rank = t(score > 4000 ? "master" : score > 3000 ? "expert" : score > 2000 ? "intermediate" : "beginner")
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 flex items-center justify-center p-4">
@@ -182,28 +155,28 @@ function CompetitiveGameContent() {
           <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 1 }}>
             <Trophy className="w-24 h-24 mx-auto text-yellow-500 fill-yellow-500 mb-4" />
           </motion.div>
-          <h1 className="text-4xl font-black mb-2">GAME OVER!</h1>
+          <h1 className="text-4xl font-black mb-2">{t("gameOver")}</h1>
           <p className="text-xl font-bold text-muted-foreground mb-6">{playerName}</p>
 
           <div className="bg-gradient-to-r from-yellow-400 to-orange-400 p-6 rounded-xl border-4 border-black mb-6">
-            <p className="text-sm font-bold text-white mb-1">Final Score</p>
+            <p className="text-sm font-bold text-white mb-1">{t("finalScore")}</p>
             <p className="text-5xl font-black text-white">{score.toLocaleString()}</p>
-            <p className="text-lg font-bold text-white mt-2">Rank: {rank}</p>
+            <p className="text-lg font-bold text-white mt-2">{t("rank")}: {rank}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
-              <p className="text-sm font-bold text-blue-900">Questions</p>
+              <p className="text-sm font-bold text-blue-900">{t("questions")}</p>
               <p className="text-2xl font-black">{totalQuestions}</p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
-              <p className="text-sm font-bold text-green-900">Avg/Q</p>
+              <p className="text-sm font-bold text-green-900">{t("avgPerQuestion")}</p>
               <p className="text-2xl font-black">{avgScore}</p>
             </div>
           </div>
 
           <div className="text-left mb-6">
-            <h2 className="font-black text-lg mb-2 capitalize">Top scores · {difficulty}</h2>
+            <h2 className="font-black text-lg mb-2">{t("topScores")} · {t(difficulty)}</h2>
             <ol className="space-y-1">
               {highScores.map((h, i) => (
                 <li
@@ -215,21 +188,22 @@ function CompetitiveGameContent() {
                 </li>
               ))}
             </ol>
-            <p className="text-xs text-muted-foreground mt-2">Saved on this device.</p>
+            <p className="text-xs text-muted-foreground mt-2">{t("savedOnDevice")}</p>
           </div>
 
           <div className="flex flex-col gap-3">
             <Button
               onClick={() => window.location.reload()}
-              className="game-btn w-full bg-green-500 border-green-700 hover:bg-green-600"
+              className="w-full h-12 text-lg font-bold border-2 border-green-800 bg-green-600 hover:bg-green-700 text-white"
             >
-              Play Again
+              {t("playAgain")}
             </Button>
             <Button
               onClick={() => router.push("/competitive")}
-              className="game-btn w-full bg-white text-black hover:bg-gray-100"
+              variant="outline"
+              className="w-full h-12 text-lg font-bold border-2 border-black bg-white text-black hover:bg-gray-100"
             >
-              Back to Lobby
+              {t("backToLobby")}
             </Button>
           </div>
         </motion.div>
@@ -243,9 +217,9 @@ function CompetitiveGameContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 flex flex-col">
       {/* Top HUD */}
-      <div className="bg-white border-b-4 border-black p-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="bg-blue-500 text-white px-4 py-2 rounded-lg border-2 border-black font-black">
+      <div className="bg-white border-b-4 border-black p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <div className="max-w-[8rem] truncate bg-blue-500 text-white px-4 py-2 rounded-lg border-2 border-black font-black">
             {playerName}
           </div>
           <div className="flex items-center gap-2 bg-yellow-400 px-4 py-2 rounded-lg border-2 border-black">
@@ -263,11 +237,21 @@ function CompetitiveGameContent() {
             </motion.div>
           )}
         </div>
-        <div className="text-right">
-          <p className="text-xs font-bold text-muted-foreground">QUESTION</p>
+        <div className="flex items-center gap-2 sm:gap-4 ms-auto">
+        <div className="text-end">
+          <p className="text-xs font-bold text-muted-foreground uppercase">{t("question")}</p>
           <p className="text-xl font-black">
             {currentQIndex + 1}/{totalQuestions}
           </p>
+        </div>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/competitive")}
+            aria-label={t("quit")}
+            className="h-11 border-2 border-black bg-white text-black font-bold"
+          >
+            <X className="w-5 h-5" aria-hidden="true" /> <span className="hidden sm:inline">{t("quit")}</span>
+          </Button>
         </div>
       </div>
 
@@ -302,7 +286,7 @@ function CompetitiveGameContent() {
 
               {currentQuestion.matrix && (
                 <div className="flex justify-center mb-8">
-                  <div className="inline-flex items-center gap-2 font-mono text-4xl">
+                  <div dir="ltr" className="inline-flex items-center gap-2 font-mono text-4xl">
                     <div className="w-4 border-4 border-r-0 border-black self-stretch rounded-l-xl" />
                     <div
                       className="grid gap-4"
@@ -334,7 +318,7 @@ function CompetitiveGameContent() {
                       className={`${TILES[i].className} flex items-center gap-4 rounded-xl border-4 border-black p-5 text-left text-2xl md:text-3xl font-black text-white shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-1 active:translate-y-0 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black`}
                     >
                       <span aria-hidden="true" className="text-3xl">{TILES[i].shape}</span>
-                      <span className="flex-1">{label(opt, gameSettings.language)}</span>
+                      <span className="flex-1">{optionLabel(opt, t)}</span>
                       <kbd className="hidden md:inline text-sm font-bold opacity-80">{i + 1}</kbd>
                     </button>
                   ))}
@@ -351,10 +335,11 @@ function CompetitiveGameContent() {
                     ) : (
                       <X className="w-12 h-12 text-red-600" />
                     )}
-                    <h3 className="text-4xl font-black">{isCorrect ? "CORRECT!" : "WRONG!"}</h3>
+                    <h3 className="text-4xl font-black">{isCorrect ? t("correct2") : t("wrong")}</h3>
                   </div>
                   {!isCorrect && (
-                    <p className="text-xl font-bold text-muted-foreground">{chosen === null ? "Time's up! " : ""}Answer: {label(currentQuestion.answer, gameSettings.language)}</p>
+                    <p className="text-xl font-bold text-muted-foreground">{chosen === null ? `${t("timesUp")} ` : ""}
+                      {t("answer")}: {optionLabel(currentQuestion.answer, t)}</p>
                   )}
                 </motion.div>
               )}
@@ -376,7 +361,7 @@ export default function CompetitiveGame() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 flex items-center justify-center">
-          <div className="text-white text-2xl font-bold">Loading...</div>
+          <LoadingText className="text-white text-2xl font-bold" />
         </div>
       }
     >

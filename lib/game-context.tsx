@@ -13,6 +13,25 @@ interface GameState {
   setGameSettings: (settings: Partial<GameSettings>) => void
 }
 
+type Progress = Record<number, Partial<Record<"easy" | "medium" | "hard", boolean>>>
+
+// Only which sub-levels were passed is saved, so question fixes and new translations reach returning players.
+export function progressOf(levels: Level[]): Progress {
+  return Object.fromEntries(
+    levels.map((l) => [l.id, { easy: l.subLevels.easy.passed, medium: l.subLevels.medium.passed, hard: l.subLevels.hard.passed }]),
+  )
+}
+
+/** Marks passed sub-levels on the current question bank. Also reads the old format (a full copy of the levels). */
+export function applyProgress(saved: unknown): Level[] {
+  const progress: Progress = Array.isArray(saved) ? progressOf(saved as Level[]) : ((saved ?? {}) as Progress)
+  return GAME_LEVELS.map((level) => {
+    const p = progress[level.id] ?? {}
+    const sub = (k: "easy" | "medium" | "hard") => ({ ...level.subLevels[k], passed: p[k] === true })
+    return { ...level, subLevels: { easy: sub("easy"), medium: sub("medium"), hard: sub("hard") } }
+  })
+}
+
 const GameContext = createContext<GameState | undefined>(undefined)
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
@@ -31,7 +50,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem("matrix-match-progress")
       if (saved) {
         // Saved progress can only be read after mount (localStorage doesn't exist on the server).
-        setLevels(JSON.parse(saved)) // eslint-disable-line react-hooks/set-state-in-effect
+        setLevels(applyProgress(JSON.parse(saved))) // eslint-disable-line react-hooks/set-state-in-effect
       }
 
       const savedSettings = localStorage.getItem("matrix-match-settings")
@@ -56,7 +75,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Save progress whenever it changes
   useEffect(() => {
     if (isHydrated) {
-      localStorage.setItem("matrix-match-progress", JSON.stringify(levels))
+      localStorage.setItem("matrix-match-progress", JSON.stringify(progressOf(levels)))
     }
   }, [levels, isHydrated])
 

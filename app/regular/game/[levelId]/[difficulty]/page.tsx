@@ -7,10 +7,13 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { MatrixDisplay } from "@/components/ui/matrix-display"
 import { HelpPanel } from "@/components/help-panel"
+import { MathText } from "@/components/math-text"
 import { Progress } from "@/components/ui/progress"
 import confetti from "canvas-confetti"
 import { playTone } from "@/lib/sound"
 import type { Question } from "@/lib/types"
+import { answersMatch } from "@/lib/answers"
+import { langCode, levelText } from "@/lib/translations"
 
 export default function GamePage() {
   const params = useParams()
@@ -35,18 +38,8 @@ export default function GamePage() {
   const [gameFinished, setGameFinished] = useState(false)
 
   const getTranslatedQuestion = (question: Question) => {
-      const langCode =
-        gameSettings.language === "English"
-          ? "en"
-          : gameSettings.language === "Spanish"
-            ? "es"
-            : gameSettings.language === "Mandarin"
-              ? "zh"
-              : gameSettings.language === "Hindi"
-                ? "hi"
-                : "ar"
-
-      if (langCode === "en") {
+      const code = langCode(gameSettings.language)
+      if (code === "en") {
         return {
           question: question.question,
           options: question.options,
@@ -56,7 +49,7 @@ export default function GamePage() {
         }
       }
 
-      const translation = question.translations?.[langCode as keyof typeof question.translations]
+      const translation = question.translations?.[code]
       return {
         question: translation?.question || question.question,
         options: translation?.options || question.options,
@@ -85,7 +78,7 @@ export default function GamePage() {
     if (currentQuestion.type === "multiple-choice" || currentQuestion.type === "true-false") {
       isCorrect = selectedOption !== null && currentQuestion.options?.[selectedOption] === currentQuestion.correctAnswer
     } else {
-      isCorrect = inputAnswer.trim().toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
+      isCorrect = answersMatch(inputAnswer, currentQuestion.correctAnswer)
     }
 
     if (isCorrect) {
@@ -143,17 +136,19 @@ export default function GamePage() {
           ? "text-xl"
           : "text-2xl" // "largest"
 
-  if (!level || !subLevel) return <div className="p-8 text-center font-bold">Level not found!</div>
+  if (!level || !subLevel) return <div className="p-8 text-center font-bold">{t("levelNotFound")}</div>
+
+  const levelName = levelText(level, "name", gameSettings.language)
 
   if (showPreGame) {
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="bg-background border-4 border-foreground p-8 rounded-2xl max-w-lg w-full text-center shadow-md">
           <h2 className={`text-3xl font-black mb-4 text-primary ${textSizeClass}`}>
-            {t("readyFor")} {level.name}?
+            {t("readyFor")} {levelName}?
           </h2>
-          <p className={`text-xl font-bold mb-2 capitalize text-muted-foreground ${textSizeClass}`}>
-            {difficulty} {t("mode")}
+          <p className={`text-xl font-bold mb-2 text-muted-foreground ${textSizeClass}`}>
+            {t(difficulty)}
           </p>
           <div className="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-6 text-left">
             <h3 className={`font-bold text-lg mb-2 ${textSizeClass}`}>{t("instructions")}</h3>
@@ -163,9 +158,18 @@ export default function GamePage() {
               <li>{t("passTwo")}</li>
             </ul>
           </div>
-          <Button onClick={() => setShowPreGame(false)} className="game-btn w-full">
-            {t("startGame")}
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button onClick={() => setShowPreGame(false)} className="w-full h-12 text-lg font-bold border-2 border-foreground">
+              {t("startGame")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/regular")}
+              className="w-full h-12 text-lg font-bold border-2 border-foreground bg-white text-foreground"
+            >
+              {t("backToLevels")}
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -205,12 +209,12 @@ export default function GamePage() {
           <div className="flex flex-col gap-3">
             <Button
               onClick={() => router.push("/regular")}
-              className="game-btn w-full bg-white text-foreground hover:bg-gray-100"
+              variant="outline" className="w-full h-12 text-lg font-bold border-2 border-foreground bg-white text-foreground hover:bg-gray-100"
             >
               {t("backToLevels")}
             </Button>
             {!passed && (
-              <Button onClick={() => window.location.reload()} className="game-btn w-full">
+              <Button onClick={() => window.location.reload()} className="w-full h-12 text-lg font-bold border-2 border-foreground">
                 {t("retry")}
               </Button>
             )}
@@ -222,30 +226,41 @@ export default function GamePage() {
 
   return (
     <div className={containerClass}>
-      <HelpPanel hint={translatedQuestion?.hint} definition={translatedQuestion?.definition} />
 
       {/* Top Bar */}
       <div className="p-4 border-b-4 border-foreground flex items-center justify-between bg-white z-10">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/regular")}>
-            <span className="text-2xl">←</span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => router.push("/regular")}
+            aria-label={t("backToLevels")}
+            className="size-11 rounded-full border-2 border-foreground bg-white text-foreground"
+          >
+            <span aria-hidden="true" className="text-2xl rtl:rotate-180">←</span>
           </Button>
           <div className="flex flex-col">
-            <span className={`font-black uppercase text-xs text-muted-foreground ${textSizeClass}`}>{level.name}</span>
-            <span className={`font-bold text-sm capitalize ${textSizeClass}`}>
-              {difficulty} • Q{currentQIndex + 1}/3
+            <span className={`font-black uppercase text-xs text-muted-foreground ${textSizeClass}`}>{levelName}</span>
+            <span className={`font-bold text-sm ${textSizeClass}`}>
+              {t(difficulty)} • {currentQIndex + 1}/{questions.length}
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-            <span className="mr-2">↻</span> {t("restart")}
+          <HelpPanel hint={translatedQuestion?.hint} definition={translatedQuestion?.definition} />
+          <Button
+            variant="outline"
+            onClick={() => window.location.reload()}
+            className="h-10 rounded-full border-2 border-foreground bg-white text-foreground font-bold"
+            aria-label={t("restart")}
+          >
+            <span aria-hidden="true">↻</span> <span className="hidden sm:inline">{t("restart")}</span>
           </Button>
         </div>
       </div>
 
       {/* Progress Bar */}
-      <Progress value={(currentQIndex / 3) * 100} className="h-4 rounded-none border-b-4 border-foreground" />
+      <Progress value={(currentQIndex / questions.length) * 100} className="h-4 rounded-none border-b-4 border-foreground" />
 
       {/* Game Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -256,7 +271,7 @@ export default function GamePage() {
               <h2
                 className={`font-black ${textSizeClass === "text-base" ? "text-2xl md:text-4xl" : textSizeClass === "text-lg" ? "text-3xl md:text-5xl" : "text-4xl md:text-6xl"}`}
               >
-                {translatedQuestion?.question}
+                <MathText text={translatedQuestion?.question ?? ""} />
               </h2>
               {(currentQuestion.matrix || currentQuestion.additionalMatrix) && (
                 <div className="py-8 flex flex-col md:flex-row items-center justify-center gap-8">
@@ -291,21 +306,43 @@ export default function GamePage() {
                         ${isQuestionDone && selectedOption === i && i !== correctIndex ? "bg-red-100 border-red-500" : ""}
                       `}
                     >
-                      {opt}
+                      <MathText text={opt} />
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col gap-4">
+                <form
+                  className="flex flex-col gap-4"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleSubmit()
+                  }}
+                >
+                  <label htmlFor="answer" className="sr-only">
+                    {t("typeYourAnswer")}
+                  </label>
                   <input
+                    id="answer"
                     type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
                     disabled={isQuestionDone}
                     value={inputAnswer}
                     onChange={(e) => setInputAnswer(e.target.value)}
-                    placeholder="Type your answer..."
+                    placeholder={t("typeYourAnswer")}
                     className={`w-full p-4 text-center font-bold border-4 border-gray-200 rounded-xl focus:border-primary focus:outline-none ${textSizeClass}`}
                   />
-                </div>
+                </form>
+              )}
+
+              {!isQuestionDone && currentAttempts > 0 && (
+                <p
+                  key={currentAttempts}
+                  role="status"
+                  className={`mt-6 p-3 rounded-lg border-l-8 border-red-500 bg-red-50 font-bold text-red-800 animate-shake ${textSizeClass}`}
+                >
+                  ✕ {t("notQuite")} {3 - currentAttempts}
+                </p>
               )}
 
               {/* Explanation / Feedback */}
@@ -321,10 +358,13 @@ export default function GamePage() {
                     )}
                     {status[currentQuestion.id] === "correct" ? t("correct") : t("incorrect")}
                   </h4>
-                  <p className="font-medium text-muted-foreground">{translatedQuestion?.explanation}</p>
+                  <p className="font-medium text-muted-foreground">
+                    <MathText text={translatedQuestion?.explanation ?? ""} />
+                  </p>
                   {status[currentQuestion.id] === "failed" && (
                     <p className="mt-2 font-bold text-primary">
-                      {t("correctAnswer")} {currentQuestion.correctAnswer}
+                      {t("correctAnswer")}{" "}
+                      {correctIndex >= 0 ? translatedQuestion?.options?.[correctIndex] : currentQuestion.correctAnswer}
                     </p>
                   )}
                 </div>
@@ -346,17 +386,17 @@ export default function GamePage() {
 
                 <div className="flex gap-4">
                   {!isQuestionDone && (
-                    <Button onClick={handleSubmit} className="game-btn px-8">
+                    <Button onClick={handleSubmit} className="h-11 px-8 text-base font-bold border-2 border-foreground">
                       {t("submit")}
                     </Button>
                   )}
                   {isQuestionDone && (
                     <Button
                       onClick={handleNext}
-                      className="game-btn px-8 bg-green-500 border-green-700 hover:bg-green-600 text-white"
+                      className="h-11 px-8 text-base font-bold border-2 border-green-800 bg-green-600 hover:bg-green-700 text-white"
                     >
                       {currentQIndex < questions.length - 1 ? t("nextQuestion") : t("finishLevel")}{" "}
-                      <span className="ml-2">→</span>
+                      <span aria-hidden="true" className="ml-2 rtl:rotate-180">→</span>
                     </Button>
                   )}
                 </div>
@@ -378,9 +418,9 @@ export default function GamePage() {
             <p className={`font-bold text-muted-foreground ${textSizeClass}`}>
               {showExplanation
                 ? status[currentQuestion?.id] === "correct"
-                  ? "Great job!"
-                  : "Don't worry, try the next one!"
-                : "You can do it!"}
+                  ? t("greatJob")
+                  : t("tryNext")
+                : t("youCanDoIt")}
             </p>
           </div>
         </div>
