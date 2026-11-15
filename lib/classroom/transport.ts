@@ -2,8 +2,8 @@ import { isEnvelope, type Envelope } from "./protocol"
 
 // Public by design: Supabase's publishable key only allows what the project's settings allow.
 // Class games only use Realtime "broadcast" channels; nothing is stored.
-export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
-export const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY ?? ""
+export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://pafmnebyuwgsmvqvuhak.supabase.co"
+export const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY ?? "sb_publishable_7qbE0anBzLysiEuGK2QeDQ_qBTJgGJY"
 
 // Tests run several "devices" as tabs of one browser, talking over a BroadcastChannel.
 const LOCAL = process.env.NEXT_PUBLIC_ROOM_TRANSPORT === "local"
