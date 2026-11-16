@@ -46,6 +46,8 @@ function JoinGame() {
   const keys = useRef<KeyPair | null>(null)
   const room = useRef<Room | null>(null)
   const lastHost = useRef(0)
+  const joinedAt = useRef(0)
+  const lastAsk = useRef(0)
   const viewRef = useRef<View>(view)
   // Who and where, for display (refs can't be read while rendering)
   const [me, setMe] = useState<{ name: string; code: string } | null>(null)
@@ -150,10 +152,11 @@ function JoinGame() {
       save()
       setView({ v: "finding" })
       room.current = await openRoom(s.code, (env) => void onHost(env), setStatus)
-      if (s.host) {
-        setView({ v: "asking" })
-        void sendJoin()
-      }
+      joinedAt.current = Date.now()
+      if (s.host) setView({ v: "asking" })
+      // Knock straight away; the host replies with its hello, so we don't wait for its timer.
+      void sendJoin()
+      lastAsk.current = Date.now()
     },
     [onHost, sendJoin],
   )
@@ -168,15 +171,19 @@ function JoinGame() {
     return () => room.current?.close()
   }, [connect])
 
-  // Keep asking while waiting (the host may have missed it), give up if no game answers,
-  // and say so when the host goes quiet.
+  // Keep asking while waiting (the host may have missed it), give up if no game answers within
+  // 12 seconds of pressing Join, and say so when the host goes quiet.
   useEffect(() => {
     const timer = setInterval(() => {
       const v = viewRef.current.v
-      if (v === "asking") void sendJoin()
-      if (v === "finding" && !seat.current?.host) stop("noRoom")
-      setStale(lastHost.current > 0 && Date.now() - lastHost.current > 10_000)
-    }, 8000)
+      const now = Date.now()
+      if ((v === "asking" || v === "finding") && now - lastAsk.current > 4000) {
+        lastAsk.current = now
+        void sendJoin()
+      }
+      if (v === "finding" && !seat.current?.host && joinedAt.current && now - joinedAt.current > 12_000) stop("noRoom")
+      setStale(lastHost.current > 0 && now - lastHost.current > 10_000)
+    }, 1000)
     return () => clearInterval(timer)
   }, [sendJoin, stop])
 

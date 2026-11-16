@@ -100,6 +100,8 @@ export default function HostPage() {
         if (typeof body.pid !== "string" || body.pid.length > 64 || !body.key || !(await verify(env, body.key))) return
         const s = stateRef.current
         if (!s) return
+        // Answer right away: browsers slow timers in background tabs, so the 3-second hello alone can lag.
+        if (keysRef.current) await send({ t: "hello", key: keysRef.current.publicJwk, phase: s.phase, locked: s.locked })
         const { state: next, outcome } = requestJoin(s, body.pid, body.name, publicPart(body.key))
         if (next !== s) commit(next)
         if (outcome === "admitted" || outcome === "rejoined") {
